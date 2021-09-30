@@ -10,6 +10,7 @@ namespace AkkaDotNetExmaple
     {
         static void Main(string[] args)
         {
+
         }
     }
 }
