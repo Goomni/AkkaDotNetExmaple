@@ -23,10 +23,11 @@ namespace ServiceA
             {
                 while(true)
                 {
-                    var actorTest = new TestActor(actorSystem);
-                    actorTest.RunAll();
+                    var testActor = actorSystem.ActorOf(TestActor.Props(actorSystem), "TestActor");
+                    Console.WriteLine($"Actor Created {testActor}");
+                    Console.WriteLine(testActor.Ask("RunAll").Result);                    
 
-                    if(Console.ReadKey(true).Key == ConsoleKey.X)
+                    if (Console.ReadKey(true).Key == ConsoleKey.X)
                     {
                         Console.WriteLine("Service A Terminating...");
                         break;

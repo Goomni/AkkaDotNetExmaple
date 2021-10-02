@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ServiceA
 {
-    public class TestActor
+    public class TestActor : ReceiveActor
     {
         protected ActorSystem actorSystem;
 
@@ -15,15 +15,65 @@ namespace ServiceA
         public TestActor(ActorSystem actorSystem)
         {
             this.actorSystem = actorSystem;
+
+            Receive<string>(x =>
+            {
+                switch (x)
+                {
+                    case "RunAll":
+                        RunAll();
+                        Sender.Tell("Run All Executed");
+                        break;
+                    default:
+                        Sender.Tell("Invalid Message");
+                        break;
+                }
+            });
         }
         protected void FirstTest()
         {
-            var myReceiveActor = actorSystem.ActorOf<MyReceiveActor>("myReceiveActor");
+            var myReceiveActor = actorSystem.ActorOf<MyReceiveActor>("MyReceiveActor");
             Console.WriteLine(myReceiveActor.Ask(new PingMessage(++pingTag)).Result); 
         }
+
+        protected void SecondTest()
+        {
+            var myReceiveActor = actorSystem.ActorOf<MyReceiveActor>("MyReceiveActorTwo");
+            Console.WriteLine(myReceiveActor.Ask(new MakeChildMessage()).Result);
+
+            var mySon = actorSystem.ActorSelection("/user/MyReceiveActorTwo");
+            Console.WriteLine(mySon.Ask(new PingMessage(++pingTag)).Result);
+            Console.WriteLine(mySon.Ask(new MakeChildMessage()).Result);
+
+            var myGrandSon = actorSystem.ActorSelection($"/user/MyReceiveActorTwo/MyReceiveActorChild{0}");
+            Console.WriteLine(myGrandSon.Ask(new PingMessage(++pingTag)).Result);
+        }     
+
+        protected void ThirdTest()
+        {
+            var mySwapActor = actorSystem.ActorOf<SwapActor>("MySwapActor");
+            mySwapActor.Tell("BeAngry");
+            mySwapActor.Tell("BeHappy");
+            mySwapActor.Tell("BeHappy");
+            mySwapActor.Tell("BeAngry");
+            mySwapActor.Tell("BeAngry");
+            mySwapActor.Tell("BeHappy");
+        }
+        protected void FourthTest()
+        {
+            
+        }
+        
+        public static Props Props(ActorSystem system)
+        {
+            return Akka.Actor.Props.Create(() => new TestActor(system));            
+        }
+
         public void RunAll()
         {
             FirstTest();
+            SecondTest();
+            ThirdTest();
         }
     }
 }
