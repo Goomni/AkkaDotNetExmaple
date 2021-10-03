@@ -254,6 +254,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GracefulStopActor.cs" />
     <Compile Include="LifeCycleActor.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MyActorSame.cs" />

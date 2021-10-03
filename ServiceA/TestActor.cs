@@ -1,14 +1,14 @@
 ﻿using Akka.Actor;
+using Akka.Event;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static Akka.Actor.FSMBase;
 
 namespace ServiceA
 {
     public class TestActor : ReceiveActor
     {
+        private ILoggingAdapter logger = Context.GetLogger();
+
         protected ActorSystem actorSystem;
 
         private int pingTag = 0;
@@ -30,13 +30,13 @@ namespace ServiceA
                 }
             });
         }
-        protected void FirstTest()
+        protected void PingTest()
         {
             var myReceiveActor = actorSystem.ActorOf<MyReceiveActor>("MyReceiveActor");
             Console.WriteLine(myReceiveActor.Ask(new PingMessage(++pingTag)).Result); 
         }
 
-        protected void SecondTest()
+        protected void MakeChildTest()
         {
             var myReceiveActor = actorSystem.ActorOf<MyReceiveActor>("MyReceiveActorTwo");
             Console.WriteLine(myReceiveActor.Ask(new MakeChildMessage()).Result);
@@ -49,7 +49,7 @@ namespace ServiceA
             Console.WriteLine(myGrandSon.Ask(new PingMessage(++pingTag)).Result);
         }     
 
-        protected void ThirdTest()
+        protected void BecomeTest()
         {
             var mySwapActor = actorSystem.ActorOf<SwapActor>("MySwapActor");
             mySwapActor.Tell("BeAngry");
@@ -59,9 +59,25 @@ namespace ServiceA
             mySwapActor.Tell("BeAngry");
             mySwapActor.Tell("BeHappy");
         }
-        protected void FourthTest()
+        protected void WatchTest()
         {
-            
+            var targetActor = actorSystem.ActorOf<MyReceiveActor>("MyTarget");
+            var watcher = actorSystem.ActorOf(WatchActor.Props(targetActor), "MyWatcher");
+            Console.WriteLine(targetActor.Ask(new PingMessage(++pingTag)).Result);
+            targetActor.Tell(PoisonPill.Instance, Sender);
+        }
+        protected async void GracefulStopTest()
+        {
+            var graceStopActor = actorSystem.ActorOf<GracefulStopActor>();
+
+            try
+            {
+                await graceStopActor.GracefulStop(TimeSpan.FromSeconds(5), Shutdown.Instance);
+            }            
+            catch(Exception ex)
+            {
+                logger.Error(ex.Message);
+            }
         }
         
         public static Props Props(ActorSystem system)
@@ -71,9 +87,10 @@ namespace ServiceA
 
         public void RunAll()
         {
-            FirstTest();
-            SecondTest();
-            ThirdTest();
+            PingTest();
+            MakeChildTest();
+            WatchTest();
+            GracefulStopTest();
         }
     }
 }

@@ -29,7 +29,7 @@ namespace ServiceA
 
             if(message is Terminated terminated)
             {
-                if(terminated.Equals(child))
+                if(terminated.ActorRef.Equals(child))
                 {
                     logger.Error($"My TargetChild terminated.....");
                 }
